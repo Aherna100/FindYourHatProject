@@ -8,7 +8,7 @@ const pathCharacter = '*';
 class Field {
     constructor(field) {
         this.field = field;
-        this.hat = this.playerHat(hat);
+        this.hat = this.counter(hat);
         this.holes = this.counter(hole);
     }
 
@@ -25,25 +25,18 @@ class Field {
         for (let i = 0; i < field.length; i++) {
             for (let j = 0; j < field[i].length; j++) {
                 let item = field[i][j];
-                if (item === tiles) {
-                    fileH.push([[i], [j]]);
+                if (tiles === hole) {
+                    if (item === tiles) {
+                        fileH.push([[i], [j]]);
+                    }
+                } else {
+                    if (item === tiles) {
+                        fileH.push(i, j);
+                    }
                 }
             }
         }
         return fileH;
-    }
-
-    playerHat(obj) {
-        let field = this.field;
-        let loc = [];
-        for (let i = 0; i < field.length; i++) {
-            for (let j = 0; j < field[i].length; j++) {
-                let bus = field[i][j];
-                if (obj === bus) {
-                    loc.push(i, j)
-                }
-            }
-        } return loc;
     }
 
     verifyH(cor, cors) {
@@ -58,32 +51,33 @@ class Field {
 
     verifyF(cor, cors) {
         let holTest = this.holes;
-
-        for (let i = 0; i < holTest.length; i++) {
-            let iObj = holTest[i];
-            if (cor[0] === iObj[0][0] && cors[0] === iObj[1][0]) {
-                return false;
-            } else {
+        const funcT = (el) => {
+            if (el[0][0] === cor[0] && el[1][0] === cors[0]) {
                 return true;
+            } else {
+                return false;
             }
         }
+
+        return holTest.some(funcT);
     }
 
     game() {
         let field = this.field;
 
-        this.print();
+        console.log('Enter your input \n u: up\n d: down\n l: left\n r: right\n');
 
+        this.print();
         let gameFinish = false;
 
         do {
 
-            let ch = this.playerHat(pathCharacter);
+            let ch = this.counter(pathCharacter);
 
             let vPos = ch[0];
             let hPos = ch[1];
 
-            let userI = prompt('Enter your input ');
+            let userI = prompt('Enter your input: ');
 
             switch (userI) {
                 case "u":
@@ -92,15 +86,15 @@ class Field {
                         let i = this.verifyH([vPos - 1], [hPos]);
                         if (i) {
                             console.log("Congrats you find the hat");
-                            return gameFinish = true;
+                            gameFinish = true;
                         } else {
                             let j = this.verifyF([vPos - 1], [hPos]);
-                            if (j) {
+                            if (!j) {
                                 field[vPos - 1][hPos] = pathCharacter;
                                 field[vPos][hPos] = fieldCharacter;
                                 this.print();
                             } else {
-                                this.gameOver();
+                                gameFinish = this.gameOver();
                             }
                         }
                     } else {
@@ -113,15 +107,15 @@ class Field {
                         let i = this.verifyH([vPos + 1], [hPos]);
                         if (i) {
                             console.log("Congrats you find the hat");
-                            return gameFinish = true;
+                            gameFinish = true;
                         } else {
                             let j = this.verifyF([vPos + 1], [hPos]);
-                            if (j) {
+                            if (!j) {
                                 field[vPos + 1][hPos] = pathCharacter;
                                 field[vPos][hPos] = fieldCharacter;
                                 this.print();
                             } else {
-                                this.gameOver();
+                                gameFinish = this.gameOver();
                             }
                         }
                     } else {
@@ -134,15 +128,15 @@ class Field {
                         let i = this.verifyH([vPos], [hPos - 1]);
                         if (i) {
                             console.log("Congrats you find the hat");
-                            return gameFinish = true;
+                            gameFinish = true;
                         } else {
                             let j = this.verifyF([vPos], [hPos - 1]);
-                            if (j) {
+                            if (!j) {
                                 field[vPos][hPos - 1] = pathCharacter;
                                 field[vPos][hPos] = fieldCharacter;
                                 this.print();
                             } else {
-                                this.gameOver();
+                                gameFinish = this.gameOver();
                             }
                         }
                     } else {
@@ -158,21 +152,21 @@ class Field {
                             gameFinish = true;
                         } else {
                             let j = this.verifyF([vPos], [hPos + 1]);
-                            if (j) {
+                            if (!j) {
                                 field[vPos][hPos + 1] = pathCharacter;
                                 field[vPos][hPos] = fieldCharacter;
                                 this.print();
                             } else {
-                                this.gameOver();
+                                gameFinish = this.gameOver();
                             }
                         }
                     } else {
                         console.log("Outside the field, Try Again");
                     }
                     break;
-
-                    break;
                 default:
+                    console.log("Press the correct Key");
+                    gameFinish = this.gameOver();
                     break;
             }
 
@@ -183,7 +177,12 @@ class Field {
     }
 
     gameOver() {
-        console.log('Game Over \nPress any key to exit');
+        let uI = prompt('Game Over fall in a Hole \nPress any key to exit\nPress p to continue the game\n');
+        if (uI = 'p') {
+            this.game();
+        } else {
+            return true;
+        }
     }
 
     movement(userInput) {
@@ -237,12 +236,50 @@ class Field {
             this.startOver(userInput);
         }
     }
+
+    static generateField(width, height, nHoles) {
+        let nField = [];
+        let holes = 0;
+
+        for (let i = 0; i < height; i++) {
+            nField.push([]);
+            for (let j = 0; j < width; j++) {
+                nField[i].push(fieldCharacter);
+            }
+
+        }
+
+        while (holes < nHoles) {
+            let x = Math.floor(Math.random() * (width - 1));
+            let y = Math.floor(Math.random() * (height - 1));
+
+            let test = nField[x][y];
+            if (test != undefined) {
+                nField[x][y] = hole;
+            }
+            holes++;
+        }
+
+        let x = Math.floor(Math.random() * (width - 1));
+        let y = Math.floor(Math.random() * (height - 1));
+        nField[x][y] = hat;
+
+        for (let i = 0; i < 1; i++) {
+            let x = Math.floor(Math.random() * (width - 1));
+            let y = Math.floor(Math.random() * (height - 1));
+            nField[x][y] = pathCharacter;
+        }
+
+        return this.field = nField;
+    }
 }
 
 const myField = new Field([
-    ['*', '░', '░'],
     ['░', 'O', '░'],
-    ['O', '^', '░'],
+    ['O', '*', '░'],
+    ['░', '░', '^'],
 ]);
 
-console.log(myField.game());
+const nField = new Field(Field.generateField(5, 5, 6));
+
+console.log(nField.game());
